@@ -4,26 +4,26 @@
 #include <unistd.h>
 
 #define TAMANHO 10
-
-int inserir = 0;
-int remover = 0;
-
 int dados[TAMANHO];
 
 struct condvar cv;
 struct mutex main_mutex;
+bool state = false;
 
 void *produtor(void *arg)
 {
-  for (; inserir < TAMANHO; inserir++) {
-    condvar_signal(&cv);
-    condvar_wait(&cv, &main_mutex);
-    
-    printf("%zu: Produzindo %d\n", (size_t)arg, inserir);
-    dados[inserir] = inserir;
-    usleep(50000);
+  int inserir = 0;
+  while(inserir < TAMANHO){
+    mutex_lock(&main_mutex); // protege escrita dos dados
+    dados[inserir] = inserir; // escreve 
+    printf("%zu: Produzindo %d\n", (size_t)arg, dados[inserir]);
+    state = true; // acabou de escrever, então libera
+    mutex_unlock(&main_mutex); // libera o mutex principal
 
-    condvar_broadcast(&cv);
+    condvar_signal(&cv);
+
+    // usleep(50000);
+    inserir++;
   }
 
   return NULL;
@@ -31,14 +31,20 @@ void *produtor(void *arg)
 
 void *consumidor(void *arg)
 {
-  for (; remover < TAMANHO; remover++) {
-    condvar_signal(&cv);
-    condvar_wait(&cv, &main_mutex);
+  int remover = 0;
+  while(remover < TAMANHO) {
+    mutex_lock(&main_mutex); // protege leitura dos dados
+    
+    while(!state){ // garanto que o produtor produziu
+      printf("%zu: Consumidor esperando\n", (size_t)arg);
+      condvar_wait(&cv, &main_mutex);
+    }
 
     printf("%zu: Consumindo %d\n", (size_t)arg, dados[remover]);
-    usleep(50000);
-
-    condvar_broadcast(&cv);
+    state = false;
+    mutex_unlock(&main_mutex); // libera o mutex principal
+    // usleep(50000);
+    remover++;
   }
 
   return NULL;

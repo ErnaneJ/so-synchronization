@@ -6,8 +6,14 @@
 #include "mutex.h"
 
 struct condvar {
-  bool flag;
-  struct mutex *mtx;
+  struct mutex mutex_op;
+  struct condvar_node *front;
+  struct condvar_node *rear;
+};
+
+struct condvar_node {
+  struct mutex mtx;
+  struct condvar_node *next;
 };
 
 void condvar_init(struct condvar *cv);
