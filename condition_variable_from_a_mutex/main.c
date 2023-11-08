@@ -12,8 +12,7 @@ struct condvar cv;
 struct mutex main_mutex;
 bool state = false;
 
-volatile int inserir = 0;
-volatile int remover = 0;
+int inserir = 0;
 
 void *produtor(void *index)
 {
@@ -24,9 +23,10 @@ void *produtor(void *index)
     state = true; // acabou de escrever, então libera
     mutex_unlock(&main_mutex); // libera o mutex principal
 
-    condvar_signal(&cv);
+    condvar_broadcast(&cv);
 
     usleep(50000);
+
     inserir++;
   }
 
@@ -35,6 +35,7 @@ void *produtor(void *index)
 
 void *consumidor(void *index)
 {
+  int remover = 0;
   while(remover < MAX_SIZE) {
     mutex_lock(&main_mutex); // protege leitura dos dados
     

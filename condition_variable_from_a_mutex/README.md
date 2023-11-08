@@ -53,27 +53,30 @@
 ## With condvar and after last Update
 
 ```yaml
-T.1: Produzindo 0#528979626
-T.2: Consumindo 0#528979626
-T.1: Produzindo 1#2125759249
-T.2: Consumindo 1#2125759249
-T.1: Produzindo 2#2097746451
-T.2: Consumindo 2#2097746451
-T.1: Produzindo 3#1585569158
-T.2: Consumindo 3#1585569158
-T.1: Produzindo 4#536262883
-T.2: Consumindo 4#536262883
-T.1: Produzindo 5#2128891769
-T.2: Consumindo 5#2128891769
+T.1: Produzindo 0#1636880259
+T.2: Consumindo 0#1636880259
+T.1: Produzindo 1#1780994943
+T.2: Consumindo 1#1780994943
+T.1: Produzindo 2#1554935115
+T.2: Consumindo 2#1554935115
 
 > T.2: Consumidor esperando
 
-T.1: Produzindo 6#1058918916
-T.2: Consumindo 6#1058918916
-T.1: Produzindo 7#1053238523
-T.2: Consumindo 7#1053238523
-T.1: Produzindo 8#72153840
-T.2: Consumindo 8#72153840
-T.1: Produzindo 9#1508811972
-T.2: Consumindo 9#1508811972
+T.1: Produzindo 3#1065977462
+T.2: Consumindo 3#1065977462
+T.1: Produzindo 4#1574620560
+T.2: Consumindo 4#1574620560
+T.1: Produzindo 5#1206769939
+T.2: Consumindo 5#1206769939
+T.1: Produzindo 6#1346802505
+T.2: Consumindo 6#1346802505
+T.1: Produzindo 7#1232062155
+T.2: Consumindo 7#1232062155
+T.1: Produzindo 8#1231314711
+T.2: Consumindo 8#1231314711
+
+> T.2: Consumidor esperando
+
+T.1: Produzindo 9#1553925285
+T.2: Consumindo 9#1553925285
 ```
