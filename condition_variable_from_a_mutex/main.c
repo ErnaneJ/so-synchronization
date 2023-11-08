@@ -12,9 +12,11 @@ struct condvar cv;
 struct mutex main_mutex;
 bool state = false;
 
+volatile int inserir = 0;
+volatile int remover = 0;
+
 void *produtor(void *index)
 {
-  int inserir = 0;
   while(inserir < MAX_SIZE){
     mutex_lock(&main_mutex); // protege escrita dos dados
     dados[inserir] = rand(); // escreve 
@@ -33,7 +35,6 @@ void *produtor(void *index)
 
 void *consumidor(void *index)
 {
-  int remover = 0;
   while(remover < MAX_SIZE) {
     mutex_lock(&main_mutex); // protege leitura dos dados
     
@@ -43,7 +44,7 @@ void *consumidor(void *index)
     }
 
     printf("T.%zu: Consumindo %d#%d\n", (size_t)index, remover, dados[remover]);
-    state = false;
+    state = remover < inserir;
     mutex_unlock(&main_mutex); // libera o mutex principal
     usleep(50000);
     remover++;
