@@ -44,7 +44,7 @@ void *consumidor(void *index)
     }
 
     printf("T.%zu: Consumindo %d#%d\n", (size_t)index, remover, dados[remover]);
-    state = remover < inserir;
+    state = remover < inserir; // se ainda tiver o que consumir, continua consumindo
     mutex_unlock(&main_mutex); // libera o mutex principal
     usleep(50000);
     remover++;
