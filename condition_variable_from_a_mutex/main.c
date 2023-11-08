@@ -2,21 +2,23 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
+#include <stdlib.h>
 
-#define TAMANHO 10
-int dados[TAMANHO];
+#define MAX_SIZE 10
+int dados[MAX_SIZE];
 
 struct condvar cv;
 struct mutex main_mutex;
 bool state = false;
 
-void *produtor(void *arg)
+void *produtor(void *index)
 {
   int inserir = 0;
-  while(inserir < TAMANHO){
+  while(inserir < MAX_SIZE){
     mutex_lock(&main_mutex); // protege escrita dos dados
-    dados[inserir] = inserir; // escreve 
-    printf("%zu: Produzindo %d\n", (size_t)arg, dados[inserir]);
+    dados[inserir] = rand(); // escreve 
+    printf("T.%zu: Produzindo %d#%d\n", (size_t)index, inserir, dados[inserir]);
     state = true; // acabou de escrever, então libera
     mutex_unlock(&main_mutex); // libera o mutex principal
 
@@ -29,18 +31,18 @@ void *produtor(void *arg)
   return NULL;
 }
 
-void *consumidor(void *arg)
+void *consumidor(void *index)
 {
   int remover = 0;
-  while(remover < TAMANHO) {
+  while(remover < MAX_SIZE) {
     mutex_lock(&main_mutex); // protege leitura dos dados
     
     while(!state){ // garanto que o produtor produziu
-      printf("%zu: Consumidor esperando\n", (size_t)arg);
+      printf("\n> T.%zu: Consumidor esperando\n\n", (size_t)index);
       condvar_wait(&cv, &main_mutex);
     }
 
-    printf("%zu: Consumindo %d\n", (size_t)arg, dados[remover]);
+    printf("T.%zu: Consumindo %d#%d\n", (size_t)index, remover, dados[remover]);
     state = false;
     mutex_unlock(&main_mutex); // libera o mutex principal
     usleep(50000);
@@ -54,16 +56,18 @@ int main(void) {
   int err;
   pthread_t t1, t2;
 
+  srand(time(NULL)); 
+
   condvar_init(&cv);
   mutex_init(&main_mutex);
 
-  err = pthread_create(&t1, NULL, produtor, (void *)0);
+  err = pthread_create(&t1, NULL, produtor, (void *)1);
   if (err) {
     fprintf(stderr, "Erro: %d\n", err);
     return 1;
   }
 
-  err = pthread_create(&t2, NULL, consumidor, (void *)1);
+  err = pthread_create(&t2, NULL, consumidor, (void *)2);
   if (err) {
     fprintf(stderr, "Erro: %d\n", err);
     return 1;
