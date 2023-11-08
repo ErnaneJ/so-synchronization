@@ -22,7 +22,7 @@ void *produtor(void *arg)
 
     condvar_signal(&cv);
 
-    // usleep(50000);
+    usleep(50000);
     inserir++;
   }
 
@@ -43,7 +43,7 @@ void *consumidor(void *arg)
     printf("%zu: Consumindo %d\n", (size_t)arg, dados[remover]);
     state = false;
     mutex_unlock(&main_mutex); // libera o mutex principal
-    // usleep(50000);
+    usleep(50000);
     remover++;
   }
 

@@ -46,7 +46,7 @@ void condvar_signal(struct condvar *cv)
   }
 
   cv->front = cv->front->next; // remove
-  if(cv->front != NULL){
+  if(cv->front == NULL){
     cv->rear = NULL;
   }
 
