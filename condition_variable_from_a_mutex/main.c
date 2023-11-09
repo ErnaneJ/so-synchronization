@@ -6,49 +6,47 @@
 #include <stdlib.h>
 
 #define MAX_SIZE 10
-int dados[MAX_SIZE];
+int data[MAX_SIZE];
 
 struct condvar cv;
 struct mutex main_mutex;
-bool state = false;
+bool isProducing = false;
 
-int inserir = 0;
+int insertIndex = 0;
 
-void *produtor(void *index)
-{
-  while(inserir < MAX_SIZE){
-    mutex_lock(&main_mutex); // protege escrita dos dados
-    dados[inserir] = rand(); // escreve 
-    printf("T.%zu: Produzindo %d#%d\n", (size_t)index, inserir, dados[inserir]);
-    state = true; // acabou de escrever, então libera
-    mutex_unlock(&main_mutex); // libera o mutex principal
+void *producer(void *index) {
+  while (insertIndex < MAX_SIZE) {
+    mutex_lock(&main_mutex);  // Protects data writing
+    data[insertIndex] = rand();  // Writes to data
+    printf("T.%zu: Producing %d#%d\n", (size_t)index, insertIndex, data[insertIndex]);
+    isProducing = true;  // Indicates that data is ready
+    mutex_unlock(&main_mutex);  // Releases the main mutex
 
-    condvar_broadcast(&cv);
+    condvar_broadcast(&cv);  // Wakes up waiting threads
 
     usleep(50000);
 
-    inserir++;
+    insertIndex++;
   }
 
   return NULL;
 }
 
-void *consumidor(void *index)
-{
-  int remover = 0;
-  while(remover < MAX_SIZE) {
-    mutex_lock(&main_mutex); // protege leitura dos dados
+void *consumer(void *index) {
+  int removeIndex = 0;
+  while (removeIndex < MAX_SIZE) {
+    mutex_lock(&main_mutex);  // Protects data reading
     
-    while(!state){ // garanto que o produtor produziu
-      printf("\n> T.%zu: Consumidor esperando\n\n", (size_t)index);
+    while (!isProducing) {  // Ensures that the producer has produced
+      printf("\n> T.%zu: Consumer waiting\n\n", (size_t)index);
       condvar_wait(&cv, &main_mutex);
     }
 
-    printf("T.%zu: Consumindo %d#%d\n", (size_t)index, remover, dados[remover]);
-    state = remover < inserir; // se ainda tiver o que consumir, continua consumindo
-    mutex_unlock(&main_mutex); // libera o mutex principal
+    printf("T.%zu: Consuming %d#%d\n", (size_t)index, removeIndex, data[removeIndex]);
+    isProducing = removeIndex < insertIndex;  // Continues consuming if there is still data
+    mutex_unlock(&main_mutex);  // Releases the main mutex
     usleep(50000);
-    remover++;
+    removeIndex++;
   }
 
   return NULL;
@@ -56,27 +54,27 @@ void *consumidor(void *index)
 
 int main(void) {
   int err;
-  pthread_t t1, t2;
+  pthread_t producerThread, consumerThread;
 
   srand(time(NULL)); 
 
   condvar_init(&cv);
   mutex_init(&main_mutex);
 
-  err = pthread_create(&t1, NULL, produtor, (void *)1);
+  err = pthread_create(&producerThread, NULL, producer, (void *)1);
   if (err) {
-    fprintf(stderr, "Erro: %d\n", err);
+    fprintf(stderr, "Error: %d\n", err);
     return 1;
   }
 
-  err = pthread_create(&t2, NULL, consumidor, (void *)2);
+  err = pthread_create(&consumerThread, NULL, consumer, (void *)2);
   if (err) {
-    fprintf(stderr, "Erro: %d\n", err);
+    fprintf(stderr, "Error: %d\n", err);
     return 1;
   }
 
-  pthread_join(t1, NULL);
-  pthread_join(t2, NULL);
+  pthread_join(producerThread, NULL);
+  pthread_join(consumerThread, NULL);
 
   return 0;
 }

@@ -1,4 +1,4 @@
-# Outputs
+# Project Outputs 📊
 
 ## Without condvar
 
@@ -25,6 +25,8 @@
 1: Consumindo 9
 ```
 
+In this scenario, the project runs without using the condvar (conditional variable) synchronization mechanism. The producer generates elements, and the consumer attempts to consume them. However, without proper synchronization, the output demonstrates issues like multiple consumers consuming the same element and potential data races.
+
 ## With condvar
 
 ```yaml
@@ -49,6 +51,8 @@
 0: Produzindo 9
 1: Consumindo 9
 ```
+
+Here, the project incorporates the condvar synchronization mechanism, resolving some of the issues observed in the previous scenario. The consumer now waits for the producer to generate data using `condvar_wait`. This ensures that the consumer only attempts to consume when there is data available, improving synchronization.
 
 ## With condvar and after last Update
 
@@ -80,3 +84,5 @@ T.2: Consumindo 8#1231314711
 T.1: Produzindo 9#1553925285
 T.2: Consumindo 9#1553925285
 ```
+
+In this final scenario, the project further refines synchronization by implementing a more sophisticated approach. The producer and consumer threads are now more efficiently synchronized. The consumer thread waits when there is no data to consume and wakes up when the producer generates new data. This approach minimizes unnecessary CPU consumption, leading to a more optimal and synchronized execution.

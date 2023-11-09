@@ -2,66 +2,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void condvar_init(struct condvar *cv)
-{
+// Initializes a condition variable
+void condvar_init(struct condvar *cv) {
   cv->rear = NULL;
   cv->front = NULL;
-  mutex_init(&(cv->mutex_op));
+  mutex_init(&(cv->mutex_op));  // Initializes the mutex for condvar operations
 }
 
-void condvar_wait(struct condvar *cv, struct mutex *mtx)
-{
-  mutex_lock(&(cv->mutex_op)); // protegendo operações na fila
+// Waits on the condition variable
+void condvar_wait(struct condvar *cv, struct mutex *mtx) {
+  mutex_lock(&(cv->mutex_op));  // Protects operations on the queue
 
-  struct condvar_node condvar_node; // crio novo no
-  condvar_node.next = NULL; // inicializo nex 
-  mutex_init(&(condvar_node.mtx)); // inicializo mutex
-  
-  if(cv->rear == NULL){ // fila vazia
-    cv->front = &condvar_node; // adiciono no na fila
-  } else { // fila não vazia
-    cv->rear->next = &condvar_node; // adiciono no na fila
+  struct condvar_node condvar_node;  // Creates a new node
+  condvar_node.next = NULL;  // Initializes the next pointer
+  mutex_init(&(condvar_node.mtx));  // Initializes the mutex for the new node
+
+  if (cv->rear == NULL) {  // Queue is empty
+    cv->front = &condvar_node;  // Adds the node to the queue
+  } else {  // Queue is not empty
+    cv->rear->next = &condvar_node;  // Adds the node to the queue
   }
-  cv->rear = &condvar_node; // sempre será o ultimo
+  cv->rear = &condvar_node;  // Updates the rear pointer
 
-  // atomico????? no -> por mais que não seja, funciona como se fosse
-  mutex_lock(&(condvar_node.mtx)); // garantindo que o novo mutex foi travado ao menos uma vez antes de 'dormir'
-  
-  mutex_unlock(mtx); // libero mutex principal para outras threads poderem acessa-lo
-  mutex_unlock(&(cv->mutex_op)); // libero mutex de operações na fila
+  mutex_lock(&(condvar_node.mtx));  // Ensures the new mutex is locked at least once before 'sleeping'
 
-  mutex_lock(&(condvar_node.mtx)); // sleep de schrodinger
-  mutex_lock(mtx); // tenta novamente adquirir o mutex principal
-  mutex_unlock(&(condvar_node.mtx)); // apenas por garantia visto que dei lock mais acima
+  mutex_unlock(mtx);  // Releases the main mutex to allow other threads to access it
+  mutex_unlock(&(cv->mutex_op));  // Releases the mutex for queue operations
+
+  mutex_lock(&(condvar_node.mtx));  // 'Schrodinger's sleep'
+  mutex_lock(mtx);  // Attempts to acquire the main mutex again
+  mutex_unlock(&(condvar_node.mtx));  // Just for safety, considering the lock above
 }
 
-void condvar_signal(struct condvar *cv)
-{
+// Signals (wakes up) one waiting thread on the condition variable
+void condvar_signal(struct condvar *cv) {
   mutex_lock(&(cv->mutex_op));
   struct condvar_node *condvar_front = cv->front;
-  
-  if(condvar_front == NULL) {
+
+  if (condvar_front == NULL) {
     mutex_unlock(&(cv->mutex_op));
     return;
   }
 
-  cv->front = cv->front->next; // remove
-  if(cv->front == NULL){
+  cv->front = cv->front->next;  // Removes the front node
+  if (cv->front == NULL) {
     cv->rear = NULL;
   }
 
-  mutex_unlock(&(condvar_front->mtx));
+  mutex_unlock(&(condvar_front->mtx));  // Unlocks the mutex of the removed node
   mutex_unlock(&(cv->mutex_op));
 }
 
-void condvar_broadcast(struct condvar *cv) // @todo - multiple threads
-{
+// Signals (wakes up) all waiting threads on the condition variable
+void condvar_broadcast(struct condvar *cv) {
   mutex_lock(&(cv->mutex_op));
   struct condvar_node *condvar_front = cv->front;
-  while(condvar_front != NULL){
-    cv->front = cv->front->next; // remove
 
-    mutex_unlock(&(condvar_front->mtx));
+  while (condvar_front != NULL) {
+    cv->front = cv->front->next;  // Removes the front node
+
+    mutex_unlock(&(condvar_front->mtx));  // Unlocks the mutex of the removed node
 
     condvar_front = cv->front;
   }

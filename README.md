@@ -1,8 +1,15 @@
-# Synchronization
+# Synchronization Project 🔄
 
-## RUN
+## How to Run
 
-```sh
-# condition_variable_from_a_mutex
-gcc ./condition_variable_from_a_mutex/main.c ./condition_variable_from_a_mutex/libs/*.c -o ./condition_variable_from_a_mutex/main.o && ./condition_variable_from_a_mutex/main
+To compile and run the project, use the following commands:
+
+```bash
+# Navigate to the project directory
+cd condition_variable_from_a_mutex
+
+# Compile the source code
+gcc ./main.c ./libs/*.c -o ./main.o && ./main
 ```
+
+This will compile the program and initiate its execution. 🚀
